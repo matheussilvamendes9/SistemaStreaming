@@ -1,0 +1,17 @@
+# Ambiente virtual
+venv/
+.venv/
+
+# Arquivos Python
+__pycache__/
+*.py[cod]
+
+# Configurações locais
+.env
+.streamlit/secrets.toml
+
+# Configurações do VS Code
+.vscode/
+
+# Arquivos temporários
+.DS_Stores

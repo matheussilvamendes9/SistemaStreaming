@@ -1,5 +1,6 @@
 import streamlit as st
 from components.usuarios import mostrar_usuarios
+from components.catalogo import mostrar_catalogo
 
 # Configuração da página
 st.set_page_config(
@@ -53,9 +54,7 @@ elif pagina == "Usuários":
     mostrar_usuarios()
 
 elif pagina == "Catálogo":
-
-    st.title("🎬 Catálogo")
-    st.write("Gerenciamento de filmes e séries.")
+    mostrar_catalogo()
 
 elif pagina == "Assinaturas":
 

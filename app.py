@@ -1,5 +1,5 @@
-
 import streamlit as st
+from components.usuarios import mostrar_usuarios
 
 # Configuração da página
 st.set_page_config(
@@ -50,9 +50,7 @@ if pagina == "Visão geral":
     st.info("Aqui ficará o gráfico de atividade da plataforma.")
 
 elif pagina == "Usuários":
-
-    st.title("👥 Usuários")
-    st.write("Gerenciamento dos usuários cadastrados.")
+    mostrar_usuarios()
 
 elif pagina == "Catálogo":
 

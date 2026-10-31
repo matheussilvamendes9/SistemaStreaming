@@ -2,6 +2,7 @@ import streamlit as st
 from components.usuarios import mostrar_usuarios
 from components.catalogo import mostrar_catalogo
 from components.assinaturas import mostrar_assinaturas
+from components.historico import mostrar_historico
 
 # Configuração da página
 st.set_page_config(
@@ -61,6 +62,4 @@ elif pagina == "Assinaturas":
     mostrar_assinaturas()
 
 elif pagina == "Histórico":
-
-    st.title("🕒 Histórico")
-    st.write("Consulta do histórico de reproduções.")
+    mostrar_historico()

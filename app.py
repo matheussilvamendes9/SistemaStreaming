@@ -1,6 +1,7 @@
 import streamlit as st
 from components.usuarios import mostrar_usuarios
 from components.catalogo import mostrar_catalogo
+from components.assinaturas import mostrar_assinaturas
 
 # Configuração da página
 st.set_page_config(
@@ -57,9 +58,7 @@ elif pagina == "Catálogo":
     mostrar_catalogo()
 
 elif pagina == "Assinaturas":
-
-    st.title("💳 Assinaturas")
-    st.write("Gerenciamento dos planos de assinatura.")
+    mostrar_assinaturas()
 
 elif pagina == "Histórico":
 

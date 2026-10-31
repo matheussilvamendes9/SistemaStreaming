@@ -1,13 +1,70 @@
+
 import streamlit as st
 
+# Configuração da página
 st.set_page_config(
     page_title="StreamHub",
     page_icon="🎬",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-st.title("🎬 StreamHub")
+# Identidade visual da barra lateral
+st.sidebar.title("🎬 StreamHub")
+st.sidebar.caption("Sistema de gerenciamento")
 
-st.write("Bem-vindo ao sistema de streaming!")
+st.sidebar.divider()
 
-st.success("Aplicação iniciada com sucesso!")
+# Navegação
+pagina = st.sidebar.radio(
+    "MENU PRINCIPAL",
+    [
+        "Visão geral",
+        "Usuários",
+        "Catálogo",
+        "Assinaturas",
+        "Histórico"
+    ]
+)
+
+st.sidebar.divider()
+st.sidebar.caption("Projeto acadêmico - 2026")
+
+# Conteúdo das páginas
+if pagina == "Visão geral":
+
+    st.title("📊 Visão geral")
+    st.write("Bem-vindo ao painel administrativo do StreamHub!")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("Usuários", "1.250")
+    col2.metric("Conteúdos", "340")
+    col3.metric("Reproduções", "8.420")
+    col4.metric("Assinaturas ativas", "980")
+
+    st.divider()
+
+    st.subheader("Atividade da plataforma")
+
+    st.info("Aqui ficará o gráfico de atividade da plataforma.")
+
+elif pagina == "Usuários":
+
+    st.title("👥 Usuários")
+    st.write("Gerenciamento dos usuários cadastrados.")
+
+elif pagina == "Catálogo":
+
+    st.title("🎬 Catálogo")
+    st.write("Gerenciamento de filmes e séries.")
+
+elif pagina == "Assinaturas":
+
+    st.title("💳 Assinaturas")
+    st.write("Gerenciamento dos planos de assinatura.")
+
+elif pagina == "Histórico":
+
+    st.title("🕒 Histórico")
+    st.write("Consulta do histórico de reproduções.")

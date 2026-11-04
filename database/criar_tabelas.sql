@@ -216,3 +216,23 @@ VALUES
     ('padrao', 35.00),
     ('premium', 50.00)
 ON DUPLICATE KEY UPDATE id_plano = id_plano;
+
+-- =====================================================
+-- CADASTRO DOS GENEROS INICIAIS
+-- =====================================================
+
+INSERT INTO genero (nome)
+VALUES
+    ('Ação'),
+    ('Aventura'),
+    ('Animação'),
+    ('Comédia'),
+    ('Drama'),
+    ('Fantasia'),
+    ('Ficção Científica'),
+    ('Romance'),
+    ('Suspense'),
+    ('Terror'),
+    ('Documentário'),
+    ('Musical')
+ON DUPLICATE KEY UPDATE id_genero = id_genero;

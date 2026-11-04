@@ -23,6 +23,29 @@ MENSAGENS_ERRO = {
 }
 
 
+# Erros 1062 cuja causa e conhecida; a chave e procurada no texto do erro.
+MENSAGENS_1062 = {
+    "uq_assinatura_usuario_ativo": "O usuario ja possui uma assinatura ativa.",
+    "uq_usuario_email": "Ja existe um usuario cadastrado com esse e-mail.",
+    "uq_plano_nome": "Ja existe um plano com esse nome.",
+    "uq_genero_nome": "Ja existe um genero com esse nome.",
+    "uq_episodio_serie_temporada_numero": "Ja existe um episodio com essa temporada e numero nessa serie.",
+}
+
+
+def traduzir_erro(e):
+    """Retorna a mensagem amigavel para um erro do MySQL, ou None."""
+    if e.errno == 1644:
+        # SIGNAL SQLSTATE '45000' dos triggers: a mensagem ja esta em portugues.
+        return e.msg
+    if e.errno == 1062:
+        texto = e.msg or ""
+        for chave, mensagem in MENSAGENS_1062.items():
+            if chave in texto:
+                return mensagem
+    return MENSAGENS_ERRO.get(e.errno)
+
+
 def get_connection(banco="streaming"):
     if banco not in BANCOS:
         raise ValueError(f"Banco desconhecido: {banco}")
@@ -58,8 +81,9 @@ def transacao(banco="streaming"):
         conn.commit()
     except mysql.connector.Error as e:
         conn.rollback()
-        if e.errno in MENSAGENS_ERRO:
-            raise ErroAplicacao(MENSAGENS_ERRO[e.errno]) from e
+        mensagem = traduzir_erro(e)
+        if mensagem:
+            raise ErroAplicacao(mensagem) from e
         raise
     except Exception:
         conn.rollback()

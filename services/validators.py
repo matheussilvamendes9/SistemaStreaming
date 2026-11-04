@@ -1,4 +1,5 @@
 """Validacoes reutilizaveis (RNF05)."""
+import math
 import re
 from datetime import date, datetime
 
@@ -17,7 +18,7 @@ def exigir_texto(valor, campo, max_len=None):
 
 
 def validar_email(email):
-    email = exigir_texto(email, "e-mail", 150).lower()
+    email = exigir_texto(email, "e-mail", 255).lower()
     if not _EMAIL_REGEX.match(email):
         raise ErroAplicacao("Formato de e-mail invalido.")
     return email
@@ -35,13 +36,24 @@ def validar_inteiro(valor, campo, minimo=None, maximo=None):
     return numero
 
 
-def validar_valor_monetario(valor, campo="valor"):
+def validar_decimal(valor, campo, minimo=None):
+    """Numero com ate 2 casas decimais (ex.: progresso em minutos)."""
     try:
         numero = round(float(valor), 2)
     except (TypeError, ValueError):
         raise ErroAplicacao(f"O campo '{campo}' deve ser numerico.")
-    if numero < 0:
-        raise ErroAplicacao(f"O campo '{campo}' nao pode ser negativo.")
+    if not math.isfinite(numero):
+        raise ErroAplicacao(f"O campo '{campo}' deve ser numerico.")
+    if minimo is not None and numero < minimo:
+        raise ErroAplicacao(f"O campo '{campo}' deve ser no minimo {minimo}.")
+    return numero
+
+
+def validar_valor_monetario(valor, campo="valor"):
+    """Valor em reais; o banco exige valor maior que zero."""
+    numero = validar_decimal(valor, campo)
+    if numero <= 0:
+        raise ErroAplicacao(f"O campo '{campo}' deve ser maior que zero.")
     return numero
 
 

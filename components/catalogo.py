@@ -11,6 +11,15 @@ from services.conteudo_service import (
 )
 
 from services.genero_service import listar_generos
+
+from services.episodio_service import (
+    listar_episodios,
+    obter_episodio,
+    criar_episodio,
+    atualizar_episodio,
+    excluir_episodio
+)
+
 from database.erros import ErroAplicacao
 
 
@@ -23,10 +32,6 @@ def mostrar_catalogo():
         generos = listar_generos()
         conteudos = listar_catalogo()
 
-    except ErroAplicacao as e:
-        st.error(str(e))
-        return
-
     except Exception as e:
         st.error(f"Erro ao carregar o catálogo: {e}")
         return
@@ -35,12 +40,14 @@ def mostrar_catalogo():
     total = len(conteudos)
     filmes = sum(c["tipo"] == "filme" for c in conteudos)
     series = sum(c["tipo"] == "serie" for c in conteudos)
+    episodios_total = sum(c.get("total_episodios", 0) for c in conteudos)
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     col1.metric("Total de conteúdos", total)
     col2.metric("Filmes", filmes)
     col3.metric("Séries", series)
+    col4.metric("Episódios", episodios_total)
 
     st.divider()
 
@@ -86,7 +93,8 @@ def mostrar_catalogo():
             "tipo": "Tipo",
             "ano_lancamento": "Ano",
             "duracao_minutos": "Duração (min)",
-            "generos": "Gêneros"
+            "generos": "Gêneros",
+            "total_episodios": "Episódios"
         })
 
         df["Tipo"] = df["Tipo"].map({
@@ -105,11 +113,12 @@ def mostrar_catalogo():
 
     st.divider()
 
-    # Cadastro
-    st.subheader("➕ Cadastrar conteúdo")
-
+    # Dados auxiliares
     nomes_generos = [g["nome"] for g in generos]
     mapa_generos = {g["nome"]: g["id_genero"] for g in generos}
+
+    # Cadastro de conteúdo
+    st.subheader("➕ Cadastrar conteúdo")
 
     with st.form("form_cadastro_conteudo", clear_on_submit=True):
 
@@ -140,13 +149,12 @@ def mostrar_catalogo():
             max_value=10000,
             value=0,
             step=1,
-            help="Para séries, deixe 0 caso não queira informar."
+            help="Para séries, deixe 0. A duração será informada nos episódios."
         )
 
         generos_selecionados = st.multiselect(
             "Gêneros",
-            options=nomes_generos,
-            help="Você pode selecionar mais de um gênero."
+            options=nomes_generos
         )
 
         cadastrar = st.form_submit_button(
@@ -183,15 +191,12 @@ def mostrar_catalogo():
                     st.success("Conteúdo cadastrado com sucesso!")
                     st.rerun()
 
-                except ErroAplicacao as e:
-                    st.error(str(e))
-
                 except Exception as e:
                     st.error(f"Erro ao cadastrar conteúdo: {e}")
 
     st.divider()
 
-    # Edição
+    # Edição de conteúdo
     st.subheader("✏️ Editar conteúdo")
 
     if conteudos:
@@ -208,7 +213,6 @@ def mostrar_catalogo():
         )
 
         id_editar = opcoes[selecionado]
-
         conteudo = obter_conteudo(id_editar)
 
         tipo_atual = conteudo["tipo"]
@@ -291,9 +295,6 @@ def mostrar_catalogo():
                         st.success("Conteúdo atualizado com sucesso!")
                         st.rerun()
 
-                    except ErroAplicacao as e:
-                        st.error(str(e))
-
                     except Exception as e:
                         st.error(f"Erro ao atualizar conteúdo: {e}")
 
@@ -302,27 +303,25 @@ def mostrar_catalogo():
 
     st.divider()
 
-    # Exclusão
+    # Exclusão de conteúdo
     st.subheader("🗑️ Excluir conteúdo")
 
     if conteudos:
 
-        id_excluir = st.selectbox(
+        conteudo_excluir = st.selectbox(
             "Selecione o conteúdo que deseja excluir",
             list(opcoes.keys()),
             key="conteudo_excluir"
         )
 
-        id_excluir = opcoes[id_excluir]
+        id_excluir = opcoes[conteudo_excluir]
 
         confirmar = st.checkbox(
-            "Confirmo que desejo excluir este conteúdo."
+            "Confirmo que desejo excluir este conteúdo.",
+            key="confirmar_exclusao_conteudo"
         )
 
-        if st.button(
-            "Excluir conteúdo",
-            use_container_width=True
-        ):
+        if st.button("Excluir conteúdo", use_container_width=True):
 
             if confirmar:
                 try:
@@ -330,9 +329,6 @@ def mostrar_catalogo():
 
                     st.success("Conteúdo excluído com sucesso!")
                     st.rerun()
-
-                except ErroAplicacao as e:
-                    st.error(str(e))
 
                 except Exception as e:
                     st.error(f"Erro ao excluir conteúdo: {e}")
@@ -342,3 +338,247 @@ def mostrar_catalogo():
 
     else:
         st.info("Não existem conteúdos para excluir.")
+
+    st.divider()
+
+    # Gerenciamento de episódios
+    st.subheader("📺 Gerenciamento de episódios")
+
+    series_cadastradas = [
+        c for c in conteudos if c["tipo"] == "serie"
+    ]
+
+    if not series_cadastradas:
+
+        st.info(
+            "Cadastre uma série no catálogo antes de gerenciar episódios."
+        )
+
+    else:
+
+        opcoes_series = {
+            f'{s["titulo"]} (ID: {s["id_conteudo"]})': s["id_conteudo"]
+            for s in series_cadastradas
+        }
+
+        serie_selecionada = st.selectbox(
+            "Selecione a série",
+            list(opcoes_series.keys()),
+            key="serie_episodios"
+        )
+
+        id_serie = opcoes_series[serie_selecionada]
+
+        try:
+            episodios = listar_episodios(id_serie)
+
+        except Exception as e:
+            st.error(f"Erro ao carregar episódios: {e}")
+            return
+
+        # Listagem de episódios
+        st.markdown("#### Episódios cadastrados")
+
+        if episodios:
+
+            df_ep = pd.DataFrame(episodios)
+
+            df_ep = df_ep.rename(columns={
+                "id_episodio": "ID",
+                "titulo": "Título",
+                "temporada": "Temporada",
+                "episodio": "Episódio",
+                "duracao_minutos": "Duração (min)"
+            })
+
+            colunas = [
+                "ID", "Título", "Temporada",
+                "Episódio", "Duração (min)"
+            ]
+
+            st.dataframe(
+                df_ep[colunas],
+                use_container_width=True,
+                hide_index=True
+            )
+
+        else:
+            st.info("Esta série ainda não possui episódios.")
+
+        # Cadastro de episódio
+        st.markdown("#### ➕ Cadastrar episódio")
+
+        with st.form("form_cadastro_episodio", clear_on_submit=True):
+
+            titulo_ep = st.text_input("Título do episódio")
+
+            col_temp, col_num = st.columns(2)
+
+            with col_temp:
+                temporada = st.number_input(
+                    "Temporada",
+                    min_value=1,
+                    value=1,
+                    step=1
+                )
+
+            with col_num:
+                numero = st.number_input(
+                    "Número do episódio",
+                    min_value=1,
+                    value=1,
+                    step=1
+                )
+
+            duracao_ep = st.number_input(
+                "Duração em minutos",
+                min_value=1,
+                value=40,
+                step=1
+            )
+
+            cadastrar_ep = st.form_submit_button(
+                "Cadastrar episódio",
+                use_container_width=True
+            )
+
+            if cadastrar_ep:
+
+                if not titulo_ep.strip():
+                    st.error("Informe o título do episódio.")
+
+                else:
+                    try:
+                        criar_episodio(
+                            id_serie=id_serie,
+                            titulo=titulo_ep,
+                            temporada=int(temporada),
+                            numero=int(numero),
+                            duracao_minutos=int(duracao_ep)
+                        )
+
+                        st.success("Episódio cadastrado com sucesso!")
+                        st.rerun()
+
+                    except Exception as e:
+                        st.error(f"Erro ao cadastrar episódio: {e}")
+
+        # Edição de episódio
+        st.markdown("#### ✏️ Editar episódio")
+
+        if episodios:
+
+            opcoes_episodios = {
+                f'T{ep["temporada"]}E{ep["episodio"]} - {ep["titulo"]} (ID: {ep["id_episodio"]})':
+                ep["id_episodio"]
+                for ep in episodios
+            }
+
+            ep_selecionado = st.selectbox(
+                "Selecione o episódio para editar",
+                list(opcoes_episodios.keys()),
+                key="episodio_editar"
+            )
+
+            id_ep_editar = opcoes_episodios[ep_selecionado]
+            episodio_atual = obter_episodio(id_ep_editar)
+
+            with st.form("form_edicao_episodio"):
+
+                novo_titulo_ep = st.text_input(
+                    "Título do episódio",
+                    value=episodio_atual["titulo"]
+                )
+
+                col_temp, col_num = st.columns(2)
+
+                with col_temp:
+                    nova_temporada = st.number_input(
+                        "Temporada",
+                        min_value=1,
+                        value=int(episodio_atual["temporada"]),
+                        step=1
+                    )
+
+                with col_num:
+                    novo_numero = st.number_input(
+                        "Número do episódio",
+                        min_value=1,
+                        value=int(episodio_atual["episodio"]),
+                        step=1
+                    )
+
+                nova_duracao_ep = st.number_input(
+                    "Duração em minutos",
+                    min_value=1,
+                    value=int(episodio_atual["duracao_minutos"]),
+                    step=1
+                )
+
+                salvar_ep = st.form_submit_button(
+                    "Salvar alterações do episódio",
+                    use_container_width=True
+                )
+
+                if salvar_ep:
+
+                    if not novo_titulo_ep.strip():
+                        st.error("Informe o título do episódio.")
+
+                    else:
+                        try:
+                            atualizar_episodio(
+                                id_episodio=id_ep_editar,
+                                titulo=novo_titulo_ep,
+                                temporada=int(nova_temporada),
+                                numero=int(novo_numero),
+                                duracao_minutos=int(nova_duracao_ep)
+                            )
+
+                            st.success("Episódio atualizado com sucesso!")
+                            st.rerun()
+
+                        except Exception as e:
+                            st.error(f"Erro ao atualizar episódio: {e}")
+
+        else:
+            st.info("Cadastre um episódio para habilitar a edição.")
+
+        # Exclusão de episódio
+        st.markdown("#### 🗑️ Excluir episódio")
+
+        if episodios:
+
+            ep_excluir = st.selectbox(
+                "Selecione o episódio que deseja excluir",
+                list(opcoes_episodios.keys()),
+                key="episodio_excluir"
+            )
+
+            id_ep_excluir = opcoes_episodios[ep_excluir]
+
+            confirmar_ep = st.checkbox(
+                "Confirmo que desejo excluir este episódio.",
+                key="confirmar_exclusao_episodio"
+            )
+
+            if st.button(
+                "Excluir episódio",
+                use_container_width=True
+            ):
+
+                if confirmar_ep:
+                    try:
+                        excluir_episodio(id_ep_excluir)
+
+                        st.success("Episódio excluído com sucesso!")
+                        st.rerun()
+
+                    except Exception as e:
+                        st.error(f"Erro ao excluir episódio: {e}")
+
+                else:
+                    st.warning("Confirme a exclusão antes de continuar.")
+
+        else:
+            st.info("Não existem episódios para excluir.")

@@ -7,19 +7,14 @@ from services.assinatura_service import (
     listar_assinaturas,
     criar_assinatura,
     atualizar_assinatura,
+    encerrar_assinatura,
     excluir_assinatura
 )
 
+from services.plano_service import listar_planos
 from services.usuario_service import listar_usuarios
 from database.erros import ErroAplicacao
 
-
-# Opções e valores dos planos
-PLANOS = {
-    "Básico": ("basico", 19.90),
-    "Padrão": ("padrao", 29.90),
-    "Premium": ("premium", 39.90)
-}
 
 STATUS = {
     "Ativa": "ativa",
@@ -37,6 +32,7 @@ def mostrar_assinaturas():
     try:
         assinaturas = listar_assinaturas()
         usuarios = listar_usuarios()
+        planos = listar_planos()
 
     except ErroAplicacao as e:
         st.error(str(e))
@@ -103,6 +99,7 @@ def mostrar_assinaturas():
             "id_assinatura": "ID",
             "id_usuario": "ID do usuário",
             "usuario": "Usuário",
+            "id_plano": "ID do plano",
             "plano": "Plano",
             "valor": "Valor",
             "data_inicio": "Data de início",
@@ -110,11 +107,7 @@ def mostrar_assinaturas():
             "status": "Status"
         })
 
-        df["Plano"] = df["Plano"].map({
-            "basico": "Básico",
-            "padrao": "Padrão",
-            "premium": "Premium"
-        })
+        df["Plano"] = df["Plano"].str.title()
 
         df["Status"] = df["Status"].map({
             "ativa": "Ativa",
@@ -137,11 +130,17 @@ def mostrar_assinaturas():
 
     st.divider()
 
-    # Verificação de usuários disponíveis
+    # Verificação de usuários e planos
     if not usuarios:
         st.warning(
             "Não existem usuários cadastrados. "
             "Cadastre um usuário antes de criar uma assinatura."
+        )
+        return
+
+    if not planos:
+        st.warning(
+            "Não existem planos cadastrados no banco de dados."
         )
         return
 
@@ -150,8 +149,31 @@ def mostrar_assinaturas():
         for u in usuarios
     }
 
+    opcoes_planos = {
+        f'{p["nome"].title()} - R$ {float(p["valor"]):.2f}': p["id_plano"]
+        for p in planos
+    }
+
+    planos_por_id = {
+        p["id_plano"]: p
+        for p in planos
+    }
+
     # Cadastro
     st.subheader("Cadastrar nova assinatura")
+
+    plano_novo = st.selectbox(
+        "Plano",
+        list(opcoes_planos.keys()),
+        key="cadastro_plano"
+    )
+
+    id_plano_novo = opcoes_planos[plano_novo]
+    dados_plano_novo = planos_por_id[id_plano_novo]
+
+    st.write(
+        f'Valor da assinatura: R$ {float(dados_plano_novo["valor"]):.2f}'
+    )
 
     with st.form("form_cadastro_assinatura"):
 
@@ -160,40 +182,22 @@ def mostrar_assinaturas():
             list(opcoes_usuarios.keys())
         )
 
-        plano_selecionado = st.selectbox(
-            "Plano",
-            list(PLANOS.keys())
-        )
-
-        valor_plano = PLANOS[plano_selecionado][1]
-
-        st.write(f"Valor do plano: R$ {valor_plano:.2f}")
-
         data_inicio = st.date_input(
             "Data de início",
             value=date.today(),
             key="cadastro_data_inicio"
         )
 
-        possui_termino = st.checkbox(
-            "Definir data de término",
-            value=True,
-            key="cadastro_possui_termino"
-        )
-
-        data_termino = None
-
-        if possui_termino:
-            data_termino = st.date_input(
-                "Data de término",
-                value=date.today() + timedelta(days=30),
-                key="cadastro_data_termino"
-            )
-
         status_selecionado = st.selectbox(
             "Status",
-            list(STATUS.keys()),
+            ["Ativa", "Cancelada", "Expirada"],
             key="cadastro_status"
+        )
+
+        data_termino = st.date_input(
+            "Data de término",
+            value=date.today() + timedelta(days=30),
+            key="cadastro_data_termino"
         )
 
         cadastrar = st.form_submit_button(
@@ -203,7 +207,15 @@ def mostrar_assinaturas():
 
         if cadastrar:
 
-            if data_termino and data_termino < data_inicio:
+            status_db_novo = STATUS[status_selecionado]
+
+            # Assinaturas ativas não possuem data de término.
+            termino = (
+                None if status_db_novo == "ativa"
+                else data_termino
+            )
+
+            if termino and termino < data_inicio:
                 st.error(
                     "A data de término não pode ser anterior "
                     "à data de início."
@@ -213,11 +225,11 @@ def mostrar_assinaturas():
                 try:
                     criar_assinatura(
                         id_usuario=opcoes_usuarios[usuario_selecionado],
-                        plano=PLANOS[plano_selecionado][0],
-                        valor=valor_plano,
+                        id_plano=id_plano_novo,
                         data_inicio=data_inicio,
-                        data_termino=data_termino,
-                        status=STATUS[status_selecionado]
+                        data_termino=termino,
+                        status=status_db_novo,
+                        valor=None
                     )
 
                     st.success("Assinatura cadastrada com sucesso!")
@@ -238,7 +250,7 @@ def mostrar_assinaturas():
 
         opcoes_assinaturas = {
             f'ID {a["id_assinatura"]} - {a["usuario"]} '
-            f'({a["plano"]})': a["id_assinatura"]
+            f'({a["plano"].title()})': a["id_assinatura"]
             for a in assinaturas
         }
 
@@ -255,22 +267,41 @@ def mostrar_assinaturas():
             if a["id_assinatura"] == id_selecionado
         )
 
-        plano_atual = assinatura["plano"]
+        # Seleção do plano fora do formulário para atualizar
+        # o valor apresentado quando o plano for alterado.
+        planos_edicao = list(opcoes_planos.keys())
 
-        nome_plano_atual = next(
-            nome for nome, dados in PLANOS.items()
-            if dados[0] == plano_atual
+        indice_plano_atual = next(
+            i for i, p in enumerate(planos_edicao)
+            if opcoes_planos[p] == assinatura["id_plano"]
         )
 
-        status_atual = assinatura["status"]
-
-        nome_status_atual = next(
-            nome for nome, valor in STATUS.items()
-            if valor == status_atual
+        plano_editado = st.selectbox(
+            "Plano da assinatura",
+            planos_edicao,
+            index=indice_plano_atual,
+            key="edicao_plano"
         )
 
-        data_inicio_atual = assinatura["data_inicio"]
-        data_termino_atual = assinatura["data_termino"]
+        id_plano_editado = opcoes_planos[plano_editado]
+
+        # Se o plano não mudou, preservamos o preço contratado.
+        # Se mudou, utilizamos o preço atual do novo plano.
+        if id_plano_editado == assinatura["id_plano"]:
+            valor_editado = float(assinatura["valor"])
+        else:
+            valor_editado = float(
+                planos_por_id[id_plano_editado]["valor"]
+            )
+
+        st.write(
+            f"Valor da assinatura: R$ {valor_editado:.2f}"
+        )
+
+        # Conversão segura das datas recebidas do MySQL.
+        inicio_atual = pd.to_datetime(
+            assinatura["data_inicio"]
+        ).date()
 
         with st.form("form_editar_assinatura"):
 
@@ -282,43 +313,10 @@ def mostrar_assinaturas():
                 )
             )
 
-            plano_editado = st.selectbox(
-                "Plano",
-                list(PLANOS.keys()),
-                index=list(PLANOS.keys()).index(nome_plano_atual)
-            )
-
-            novo_valor = PLANOS[plano_editado][1]
-
-            st.write(f"Valor do plano: R$ {novo_valor:.2f}")
-
             inicio_editado = st.date_input(
                 "Data de início",
-                value=data_inicio_atual,
+                value=inicio_atual,
                 key="edicao_data_inicio"
-            )
-
-            possui_termino_editado = st.checkbox(
-                "Definir data de término",
-                value=data_termino_atual is not None,
-                key="edicao_possui_termino"
-            )
-
-            fim_editado = None
-
-            if possui_termino_editado:
-                fim_editado = st.date_input(
-                    "Data de término",
-                    value=data_termino_atual or (
-                        inicio_editado + timedelta(days=30)
-                    ),
-                    key="edicao_data_termino"
-                )
-
-            status_editado = st.selectbox(
-                "Status",
-                list(STATUS.keys()),
-                index=list(STATUS.keys()).index(nome_status_atual)
             )
 
             salvar = st.form_submit_button(
@@ -328,35 +326,93 @@ def mostrar_assinaturas():
 
             if salvar:
 
-                if fim_editado and fim_editado < inicio_editado:
-                    st.error(
-                        "A data de término não pode ser anterior "
-                        "à data de início."
+                try:
+                    atualizar_assinatura(
+                        id_assinatura=id_selecionado,
+                        id_usuario=opcoes_usuarios[usuario_editado],
+                        id_plano=id_plano_editado,
+                        data_inicio=inicio_editado,
+                        data_termino=assinatura["data_termino"],
+                        status=assinatura["status"],
+                        valor=valor_editado
                     )
 
-                else:
-                    try:
-                        atualizar_assinatura(
-                            id_assinatura=id_selecionado,
-                            id_usuario=opcoes_usuarios[usuario_editado],
-                            plano=PLANOS[plano_editado][0],
-                            valor=novo_valor,
-                            data_inicio=inicio_editado,
-                            data_termino=fim_editado,
-                            status=STATUS[status_editado]
-                        )
+                    st.success("Assinatura atualizada com sucesso!")
+                    st.rerun()
 
-                        st.success("Assinatura atualizada com sucesso!")
-                        st.rerun()
+                except ErroAplicacao as e:
+                    st.error(str(e))
 
-                    except ErroAplicacao as e:
-                        st.error(str(e))
-
-                    except Exception as e:
-                        st.error(f"Erro ao atualizar assinatura: {e}")
+                except Exception as e:
+                    st.error(f"Erro ao atualizar assinatura: {e}")
 
     else:
         st.info("Não existem assinaturas para editar.")
+
+    st.divider()
+
+    # Encerramento de assinatura
+    st.subheader("Encerrar assinatura")
+
+    assinaturas_ativas = [
+        a for a in assinaturas
+        if a["status"] == "ativa"
+    ]
+
+    if assinaturas_ativas:
+
+        opcoes_ativas = {
+            f'ID {a["id_assinatura"]} - {a["usuario"]} '
+            f'({a["plano"].title()})': a["id_assinatura"]
+            for a in assinaturas_ativas
+        }
+
+        assinatura_ativa = st.selectbox(
+            "Selecione a assinatura ativa",
+            list(opcoes_ativas.keys()),
+            key="encerrar_assinatura"
+        )
+
+        id_ativa = opcoes_ativas[assinatura_ativa]
+
+        with st.form("form_encerrar_assinatura"):
+
+            novo_status = st.selectbox(
+                "Motivo do encerramento",
+                ["Cancelada", "Expirada"]
+            )
+
+            data_encerramento = st.date_input(
+                "Data de término",
+                value=date.today(),
+                key="data_encerramento"
+            )
+
+            encerrar = st.form_submit_button(
+                "Encerrar assinatura",
+                use_container_width=True
+            )
+
+            if encerrar:
+
+                try:
+                    encerrar_assinatura(
+                        id_assinatura=id_ativa,
+                        data_termino=data_encerramento,
+                        status=STATUS[novo_status]
+                    )
+
+                    st.success("Assinatura encerrada com sucesso!")
+                    st.rerun()
+
+                except ErroAplicacao as e:
+                    st.error(str(e))
+
+                except Exception as e:
+                    st.error(f"Erro ao encerrar assinatura: {e}")
+
+    else:
+        st.info("Não existem assinaturas ativas para encerrar.")
 
     st.divider()
 

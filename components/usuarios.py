@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 
@@ -12,14 +11,63 @@ from services.usuario_service import (
 from database.erros import ErroAplicacao
 
 
+# ============================================================
+# FUNÇÕES AUXILIARES DE INTERFACE
+# (as classes CSS são definidas no app.py)
+# ============================================================
+
+def formatar_numero(valor):
+    try:
+        return f"{int(valor):,}".replace(",", ".")
+    except (TypeError, ValueError):
+        return str(valor)
+
+
+def cabecalho_pagina(tag, titulo, texto):
+    st.markdown(f"""
+    <div class="hero">
+        <span class="hero-tag">{tag}</span>
+        <h1 class="hero-titulo">{titulo}</h1>
+        <p class="hero-texto">{texto}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def cartao_indicador(icone, rotulo, valor, detalhe):
+    st.markdown(f"""
+    <div class="kpi">
+        <div class="kpi-topo">
+            <span class="kpi-rotulo">{rotulo}</span>
+            <span class="kpi-icone">{icone}</span>
+        </div>
+        <div class="kpi-valor">{valor}</div>
+        <div class="kpi-detalhe">{detalhe}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def titulo_secao(titulo, subtitulo):
+    st.markdown(f"""
+    <p class="secao-titulo">{titulo}</p>
+    <p class="secao-sub">{subtitulo}</p>
+    """, unsafe_allow_html=True)
+
+
+# ============================================================
+# PÁGINA
+# ============================================================
+
 def mostrar_usuarios():
 
-    st.title("👥 Gerenciamento de usuários")
-    st.write("Cadastre, consulte, edite e exclua usuários da plataforma.")
+    cabecalho_pagina(
+        "GESTÃO",
+        "Usuários",
+        "Cadastre, consulte, edite e exclua usuários da plataforma."
+    )
 
-    st.divider()
-
+    # --------------------------------------------------------
     # Consulta os usuários no banco de dados
+    # --------------------------------------------------------
     try:
         usuarios = listar_usuarios()
 
@@ -31,189 +79,271 @@ def mostrar_usuarios():
         )
         return
 
+    # --------------------------------------------------------
     # Indicadores
-    col1, col2 = st.columns(2)
+    # --------------------------------------------------------
+    dominios = {
+        u["email"].split("@")[-1].lower()
+        for u in usuarios
+        if u.get("email") and "@" in u["email"]
+    }
 
-    col1.metric("Total de usuários", len(usuarios))
-    col2.metric("Cadastros disponíveis", len(usuarios))
+    col1, col2 = st.columns(2, gap="medium")
 
-    st.divider()
+    with col1:
+        cartao_indicador(
+            "👥", "Total de usuários",
+            formatar_numero(len(usuarios)),
+            "Usuários cadastrados na plataforma"
+        )
 
+    with col2:
+        cartao_indicador(
+            "✉️", "Domínios de e-mail",
+            formatar_numero(len(dominios)),
+            "Provedores diferentes entre os cadastros"
+        )
+
+    st.write("")
+    st.write("")
+
+    # --------------------------------------------------------
     # Consulta de usuários
-    st.subheader("Usuários cadastrados")
-
-    busca = st.text_input(
-        "Pesquisar usuário por nome ou e-mail",
-        placeholder="Digite um nome ou e-mail..."
+    # --------------------------------------------------------
+    titulo_secao(
+        "Usuários cadastrados",
+        "Pesquise por nome ou e-mail."
     )
 
-    # Filtra os usuários
-    usuarios_filtrados = [
-        usuario for usuario in usuarios
-        if busca.lower() in usuario["nome"].lower()
-        or busca.lower() in usuario["email"].lower()
-    ]
+    with st.container(border=True):
 
-    if usuarios_filtrados:
-
-        df = pd.DataFrame(usuarios_filtrados)
-
-        df = df[["id_usuario", "nome", "email"]]
-
-        df.columns = ["ID", "Nome", "E-mail"]
-
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
+        busca = st.text_input(
+            "Pesquisar usuário por nome ou e-mail",
+            placeholder="🔍  Digite um nome ou e-mail..."
         )
 
-    else:
-        st.info("Nenhum usuário encontrado.")
+        usuarios_filtrados = [
+            usuario for usuario in usuarios
+            if busca.lower() in usuario["nome"].lower()
+            or busca.lower() in usuario["email"].lower()
+        ]
 
-    st.divider()
+        if usuarios_filtrados:
 
-    # Cadastro
-    st.subheader("➕ Cadastrar usuário")
+            df = pd.DataFrame(usuarios_filtrados)
 
-    with st.form("form_cadastro", clear_on_submit=True):
+            df = df[["id_usuario", "nome", "email"]]
 
-        nome = st.text_input("Nome completo")
-        email = st.text_input("E-mail")
+            df.columns = ["ID", "Nome", "E-mail"]
 
-        cadastrar = st.form_submit_button(
-            "Cadastrar usuário",
-            use_container_width=True
-        )
-
-        if cadastrar:
-
-            if not nome.strip() or not email.strip():
-                st.error("Preencha todos os campos.")
-
-            else:
-                try:
-                    criar_usuario(nome, email)
-
-                    st.success("Usuário cadastrado com sucesso!")
-                    st.rerun()
-
-                except ErroAplicacao as erro:
-                    st.error(str(erro))
-
-                except Exception as erro:
-                    st.error(f"Erro ao cadastrar usuário: {erro}")
-
-    st.divider()
-
-    # Edição
-    st.subheader("✏️ Editar usuário")
-
-    if usuarios:
-
-        usuarios_por_id = {
-            usuario["id_usuario"]: usuario
-            for usuario in usuarios
-        }
-
-        ids = list(usuarios_por_id.keys())
-
-        usuario_selecionado = st.selectbox(
-            "Selecione o usuário",
-            ids,
-            format_func=lambda id: (
-                f'{usuarios_por_id[id]["nome"]} '
-                f'(ID: {id})'
-            ),
-            key="usuario_editar"
-        )
-
-        usuario = usuarios_por_id[usuario_selecionado]
-
-        with st.form("form_edicao"):
-
-            novo_nome = st.text_input(
-                "Nome",
-                value=usuario["nome"],
-                key=f"editar_nome_{usuario_selecionado}"
+            st.caption(
+                f"{formatar_numero(len(df))} "
+                f"{'resultado' if len(df) == 1 else 'resultados'}"
             )
 
-            novo_email = st.text_input(
-                "E-mail",
-                value=usuario["email"],
-                key=f"editar_email_{usuario_selecionado}"
+            st.dataframe(
+                df,
+                use_container_width=True,
+                hide_index=True
             )
 
-            salvar = st.form_submit_button(
-                "Salvar alterações",
-                use_container_width=True
-            )
+        else:
+            st.info("Nenhum usuário encontrado.")
 
-            if salvar:
+    st.write("")
 
-                if not novo_nome.strip() or not novo_email.strip():
-                    st.error("Preencha todos os campos.")
+    # --------------------------------------------------------
+    # Dados auxiliares
+    # --------------------------------------------------------
+    usuarios_por_id = {
+        usuario["id_usuario"]: usuario
+        for usuario in usuarios
+    }
 
-                else:
-                    try:
-                        atualizar_usuario(
-                            usuario_selecionado,
-                            novo_nome,
-                            novo_email
+    ids = list(usuarios_por_id.keys())
+
+    # --------------------------------------------------------
+    # Ações
+    # --------------------------------------------------------
+    titulo_secao(
+        "Ações",
+        "Cadastre, edite ou exclua usuários."
+    )
+
+    aba_cadastro, aba_edicao, aba_exclusao = st.tabs([
+        "➕  Cadastrar",
+        "✏️  Editar",
+        "🗑️  Excluir"
+    ])
+
+    # ========================================================
+    # CADASTRO
+    # ========================================================
+    with aba_cadastro:
+
+        with st.container(border=True):
+
+            st.markdown("**Cadastrar usuário**")
+
+            with st.form("form_cadastro", clear_on_submit=True, border=False):
+
+                col1, col2 = st.columns(2, gap="medium")
+
+                with col1:
+                    nome = st.text_input("Nome completo")
+
+                with col2:
+                    email = st.text_input("E-mail")
+
+                cadastrar = st.form_submit_button(
+                    "Cadastrar usuário",
+                    use_container_width=True,
+                    type="primary"
+                )
+
+                if cadastrar:
+
+                    if not nome.strip() or not email.strip():
+                        st.error("Preencha todos os campos.")
+
+                    else:
+                        try:
+                            criar_usuario(nome, email)
+
+                            st.success("Usuário cadastrado com sucesso!")
+                            st.rerun()
+
+                        except ErroAplicacao as erro:
+                            st.error(str(erro))
+
+                        except Exception as erro:
+                            st.error(f"Erro ao cadastrar usuário: {erro}")
+
+    # ========================================================
+    # EDIÇÃO
+    # ========================================================
+    with aba_edicao:
+
+        if usuarios:
+
+            with st.container(border=True):
+
+                st.markdown("**Editar usuário**")
+
+                usuario_selecionado = st.selectbox(
+                    "Selecione o usuário",
+                    ids,
+                    format_func=lambda id: (
+                        f'{usuarios_por_id[id]["nome"]} '
+                        f'(ID: {id})'
+                    ),
+                    key="usuario_editar"
+                )
+
+                usuario = usuarios_por_id[usuario_selecionado]
+
+                with st.form("form_edicao", border=False):
+
+                    col1, col2 = st.columns(2, gap="medium")
+
+                    with col1:
+                        novo_nome = st.text_input(
+                            "Nome",
+                            value=usuario["nome"],
+                            key=f"editar_nome_{usuario_selecionado}"
                         )
 
-                        st.success("Usuário atualizado com sucesso!")
-                        st.rerun()
+                    with col2:
+                        novo_email = st.text_input(
+                            "E-mail",
+                            value=usuario["email"],
+                            key=f"editar_email_{usuario_selecionado}"
+                        )
 
-                    except ErroAplicacao as erro:
-                        st.error(str(erro))
+                    salvar = st.form_submit_button(
+                        "Salvar alterações",
+                        use_container_width=True,
+                        type="primary"
+                    )
 
-                    except Exception as erro:
-                        st.error(f"Erro ao atualizar usuário: {erro}")
+                    if salvar:
 
-    else:
-        st.info("Não existem usuários para editar.")
+                        if not novo_nome.strip() or not novo_email.strip():
+                            st.error("Preencha todos os campos.")
 
-    st.divider()
+                        else:
+                            try:
+                                atualizar_usuario(
+                                    usuario_selecionado,
+                                    novo_nome,
+                                    novo_email
+                                )
 
-    # Exclusão
-    st.subheader("🗑️ Excluir usuário")
+                                st.success("Usuário atualizado com sucesso!")
+                                st.rerun()
 
-    if usuarios:
+                            except ErroAplicacao as erro:
+                                st.error(str(erro))
 
-        usuario_excluir = st.selectbox(
-            "Selecione o usuário que deseja excluir",
-            ids,
-            format_func=lambda id: (
-                f'{usuarios_por_id[id]["nome"]} '
-                f'(ID: {id})'
-            ),
-            key="usuario_excluir"
-        )
+                            except Exception as erro:
+                                st.error(f"Erro ao atualizar usuário: {erro}")
 
-        confirmar = st.checkbox(
-            "Confirmo que desejo excluir este usuário.",
-            key="confirmar_exclusao_usuario"
-        )
+        else:
+            st.info("Não existem usuários para editar.")
 
-        if st.button("Excluir usuário", use_container_width=True):
+    # ========================================================
+    # EXCLUSÃO
+    # ========================================================
+    with aba_exclusao:
 
-            if confirmar:
+        if usuarios:
 
-                try:
-                    excluir_usuario(usuario_excluir)
+            with st.container(border=True):
 
-                    st.success("Usuário excluído com sucesso!")
-                    st.rerun()
+                st.markdown("**Excluir usuário**")
 
-                except ErroAplicacao as erro:
-                    st.error(str(erro))
+                st.warning(
+                    "Esta ação não pode ser desfeita.",
+                    icon="⚠️"
+                )
 
-                except Exception as erro:
-                    st.error(f"Erro ao excluir usuário: {erro}")
+                usuario_excluir = st.selectbox(
+                    "Selecione o usuário que deseja excluir",
+                    ids,
+                    format_func=lambda id: (
+                        f'{usuarios_por_id[id]["nome"]} '
+                        f'(ID: {id})'
+                    ),
+                    key="usuario_excluir"
+                )
 
-            else:
-                st.warning("Marque a confirmação antes de excluir.")
+                confirmar = st.checkbox(
+                    "Confirmo que desejo excluir este usuário.",
+                    key="confirmar_exclusao_usuario"
+                )
 
-    else:
-        st.info("Não existem usuários para excluir.")
+                if st.button(
+                    "Excluir usuário",
+                    use_container_width=True,
+                    type="primary"
+                ):
+
+                    if confirmar:
+
+                        try:
+                            excluir_usuario(usuario_excluir)
+
+                            st.success("Usuário excluído com sucesso!")
+                            st.rerun()
+
+                        except ErroAplicacao as erro:
+                            st.error(str(erro))
+
+                        except Exception as erro:
+                            st.error(f"Erro ao excluir usuário: {erro}")
+
+                    else:
+                        st.warning("Marque a confirmação antes de excluir.")
+
+        else:
+            st.info("Não existem usuários para excluir.")

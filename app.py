@@ -6,6 +6,7 @@ from components.usuarios import mostrar_usuarios
 from components.catalogo import mostrar_catalogo
 from components.assinaturas import mostrar_assinaturas
 from components.historico import mostrar_historico
+from components.analise import mostrar_analise
 
 from services.indicadores_service import obter_indicadores
 from database.erros import ErroAplicacao
@@ -430,7 +431,8 @@ with st.sidebar:
             "Usuários",
             "Catálogo",
             "Assinaturas",
-            "Histórico"
+            "Histórico",
+            "Análise de Dados"
         ],
         format_func=lambda p: {
             "Visão geral": "📊  Visão geral",
@@ -438,6 +440,7 @@ with st.sidebar:
             "Catálogo": "🎞️  Catálogo",
             "Assinaturas": "💳  Assinaturas",
             "Histórico": "🕒  Histórico",
+            "Análise de Dados": "📈  Análise de Dados",
         }[p],
         label_visibility="collapsed"
     )
@@ -636,3 +639,7 @@ elif pagina == "Assinaturas":
 elif pagina == "Histórico":
 
     mostrar_historico()
+
+elif pagina == "Análise de Dados":
+
+    mostrar_analise()

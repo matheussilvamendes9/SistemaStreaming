@@ -46,9 +46,10 @@ def traduzir_erro(e):
     return MENSAGENS_ERRO.get(e.errno)
 
 
-def get_connection(banco="streaming"):
+def get_connection(banco="streaming", allow_local_infile=False):
     if banco not in BANCOS:
         raise ValueError(f"Banco desconhecido: {banco}")
+
     return mysql.connector.connect(
         host=os.getenv("DB_HOST", "localhost"),
         port=int(os.getenv("DB_PORT", "3306")),
@@ -56,6 +57,7 @@ def get_connection(banco="streaming"):
         password=os.getenv("DB_PASSWORD", ""),
         database=BANCOS[banco],
         charset="utf8mb4",
+        allow_local_infile=allow_local_infile
     )
 
 

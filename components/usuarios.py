@@ -171,9 +171,9 @@ def mostrar_usuarios():
     )
 
     aba_cadastro, aba_edicao, aba_exclusao = st.tabs([
-        "➕  Cadastrar",
-        "✏️  Editar",
-        "🗑️  Excluir"
+        "Cadastrar",
+        "Editar",
+        "Excluir"
     ])
 
     # ========================================================

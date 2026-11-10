@@ -84,9 +84,9 @@ def mostrar_catalogo():
         st.error(f"Erro ao carregar o catálogo: {e}")
         return
 
-    # --------------------------------------------------------
+    
     # Indicadores
-    # --------------------------------------------------------
+    
     total = len(conteudos)
     filmes = sum(c["tipo"] == "filme" for c in conteudos)
     series = sum(c["tipo"] == "serie" for c in conteudos)
@@ -125,9 +125,9 @@ def mostrar_catalogo():
     st.write("")
     st.write("")
 
-    # --------------------------------------------------------
+    
     # Dados auxiliares
-    # --------------------------------------------------------
+    
     nomes_generos = [g["nome"] for g in generos]
     mapa_generos = {g["nome"]: g["id_genero"] for g in generos}
 
@@ -136,12 +136,12 @@ def mostrar_catalogo():
         for c in conteudos
     }
 
-    # --------------------------------------------------------
+    
     # Seções principais
-    # --------------------------------------------------------
+    
     aba_conteudos, aba_episodios = st.tabs([
-        "📚  Conteúdos",
-        "📺  Episódios"
+        "Conteúdos",
+        "Episódios"
     ])
 
     # ========================================================
@@ -226,14 +226,14 @@ def mostrar_catalogo():
         )
 
         aba_cad, aba_edit, aba_exc = st.tabs([
-            "➕  Cadastrar",
-            "✏️  Editar",
-            "🗑️  Excluir"
+            "Cadastrar",
+            "Editar",
+            "Excluir"
         ])
 
-        # ----------------------------------------------------
+        
         # Cadastro de conteúdo
-        # ----------------------------------------------------
+        
         with aba_cad:
 
             with st.container(border=True):
@@ -319,9 +319,9 @@ def mostrar_catalogo():
                             except Exception as e:
                                 st.error(f"Erro ao cadastrar conteúdo: {e}")
 
-        # ----------------------------------------------------
+        
         # Edição de conteúdo
-        # ----------------------------------------------------
+        
         with aba_edit:
 
             if conteudos:
@@ -426,9 +426,9 @@ def mostrar_catalogo():
             else:
                 st.info("Não existem conteúdos para editar.")
 
-        # ----------------------------------------------------
+        
         # Exclusão de conteúdo
-        # ----------------------------------------------------
+        
         with aba_exc:
 
             if conteudos:
@@ -571,9 +571,9 @@ def mostrar_catalogo():
                 "🗑️  Excluir"
             ])
 
-            # ------------------------------------------------
+            # 
             # Cadastro de episódio
-            # ------------------------------------------------
+            # 
             with aba_cad_ep:
 
                 with st.container(border=True):
@@ -641,9 +641,9 @@ def mostrar_catalogo():
                                 except Exception as e:
                                     st.error(f"Erro ao cadastrar episódio: {e}")
 
-            # ------------------------------------------------
+            # 
             # Edição de episódio
-            # ------------------------------------------------
+            # 
             with aba_edit_ep:
 
                 if episodios:
@@ -724,9 +724,9 @@ def mostrar_catalogo():
                 else:
                     st.info("Cadastre um episódio para habilitar a edição.")
 
-            # ------------------------------------------------
+            # 
             # Exclusão de episódio
-            # ------------------------------------------------
+            # 
             with aba_exc_ep:
 
                 if episodios:

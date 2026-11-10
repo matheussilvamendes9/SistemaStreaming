@@ -435,12 +435,12 @@ with st.sidebar:
             "Análise de Dados"
         ],
         format_func=lambda p: {
-            "Visão geral": "📊  Visão geral",
-            "Usuários": "👥  Usuários",
-            "Catálogo": "🎞️  Catálogo",
-            "Assinaturas": "💳  Assinaturas",
-            "Histórico": "🕒  Histórico",
-            "Análise de Dados": "📈  Análise de Dados",
+            "Visão geral": "Visão geral",
+            "Usuários": "Usuários",
+            "Catálogo": "Catálogo",
+            "Assinaturas": "Assinaturas",
+            "Histórico": "Histórico",
+            "Análise de Dados": "Análise de Dados",
         }[p],
         label_visibility="collapsed"
     )

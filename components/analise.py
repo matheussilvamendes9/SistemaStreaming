@@ -14,17 +14,17 @@ from services.analise_service import (
 )
 
 
-# ============================================================
+
 # CONFIGURAÇÕES VISUAIS
-# ============================================================
+
 
 COR_PRIMARIA = "#E50914"
 COR_SECUNDARIA = "#64748B"
 
 
-# ============================================================
+
 # FUNÇÕES AUXILIARES
-# ============================================================
+
 
 def formatar_numero(valor):
     if valor is None:
@@ -40,9 +40,9 @@ def formatar_nota(valor):
     return f"{float(valor):.2f}".replace(".", ",")
 
 
-# ============================================================
+
 # CACHE DAS CONSULTAS
-# ============================================================
+
 
 @st.cache_data(ttl=3600)
 def carregar_indicadores():
@@ -63,9 +63,9 @@ def carregar_series_sem_ano_termino():
 def carregar_distribuicao_notas(tipo, votos_minimos):
     return obter_distribuicao_notas(tipo, votos_minimos)
 
-# ============================================================
+
 # PÁGINA DE ANÁLISE
-# ============================================================
+
 
 def mostrar_analise():
 

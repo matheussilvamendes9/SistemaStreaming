@@ -1,9 +1,9 @@
 from database.connection import consultar
 
 
-# ============================================================
+
 # 1. INDICADORES GERAIS DO IMDB
-# ============================================================
+
 
 def obter_indicadores_imdb():
     sql = """
@@ -27,9 +27,9 @@ def obter_indicadores_imdb():
     return resultado[0]
 
 
-# ============================================================
+
 # 2. PRODUÇÃO DE FILMES E SÉRIES POR ANO
-# ============================================================
+
 
 def obter_producao_por_ano():
     sql = """
@@ -56,9 +56,9 @@ def obter_producao_por_ano():
     return consultar(sql, banco="analise")
 
 
-# ============================================================
+
 # 3. MÉDIA DE DURAÇÃO DOS FILMES POR ANO
-# ============================================================
+
 
 def obter_duracao_media_por_ano():
     sql = """
@@ -79,9 +79,9 @@ def obter_duracao_media_por_ano():
     return consultar(sql, banco="analise")
 
 
-# ============================================================
+
 # 4. TOP 10 FILMES POR GÊNERO
-# ============================================================
+
 
 def obter_top_filmes_por_genero(genero):
     sql = """
@@ -111,9 +111,9 @@ def obter_top_filmes_por_genero(genero):
     )
 
 
-# ============================================================
+
 # 5. INDICADORES AGRUPADOS POR TIPO DE PRODUÇÃO
-# ============================================================
+
 
 def obter_resumo_por_tipo():
     sql = """
@@ -136,9 +136,9 @@ def obter_resumo_por_tipo():
     return consultar(sql, banco="analise")
 
 
-# ============================================================
+
 # 6. SÉRIES SEM ANO DE TÉRMINO CADASTRADO
-# ============================================================
+
 
 def obter_series_sem_ano_termino():
     sql = """
@@ -153,9 +153,9 @@ def obter_series_sem_ano_termino():
     return resultado[0]["total"]
 
 
-# ============================================================
+
 # 7. DISTRIBUIÇÃO DAS NOTAS POR TIPO DE PRODUÇÃO
-# ============================================================
+
 
 def obter_distribuicao_notas(tipo, votos_minimos):
     sql = """

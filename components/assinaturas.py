@@ -28,10 +28,10 @@ ROTULO_STATUS = {
 }
 
 
-# ============================================================
+
 # FUNÇÕES AUXILIARES DE INTERFACE
 # (as classes CSS são definidas no app.py)
-# ============================================================
+
 
 def formatar_numero(valor):
     try:
@@ -87,9 +87,9 @@ def caixa_valor(valor):
     """, unsafe_allow_html=True)
 
 
-# ============================================================
+
 # PÁGINA
-# ============================================================
+
 
 def mostrar_assinaturas():
 

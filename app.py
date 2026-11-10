@@ -12,9 +12,9 @@ from services.indicadores_service import obter_indicadores
 from database.erros import ErroAplicacao
 
 
-# ============================================================
+
 # CONFIGURAÇÃO DA PÁGINA
-# ============================================================
+
 
 st.set_page_config(
     page_title="StreamHub | Administração",
@@ -24,9 +24,9 @@ st.set_page_config(
 )
 
 
-# ============================================================
+
 # PALETA
-# ============================================================
+
 
 COR_PRIMARIA = "#E50914"
 COR_FUNDO = "#0E1117"
@@ -37,9 +37,9 @@ COR_TEXTO = "#F5F6F8"
 COR_TEXTO_SUAVE = "#9AA3B5"
 
 
-# ============================================================
+
 # ESTILIZAÇÃO GLOBAL
-# ============================================================
+
 
 st.markdown(f"""
 <style>
@@ -361,9 +361,9 @@ hr {{
 """, unsafe_allow_html=True)
 
 
-# ============================================================
+
 # FUNÇÕES AUXILIARES DE INTERFACE
-# ============================================================
+
 
 def formatar_numero(valor):
     """Formata inteiros no padrão brasileiro (1.234)."""
@@ -403,9 +403,9 @@ def titulo_secao(titulo, subtitulo):
     """, unsafe_allow_html=True)
 
 
-# ============================================================
+
 # BARRA LATERAL
-# ============================================================
+
 
 with st.sidebar:
 
@@ -451,9 +451,9 @@ with st.sidebar:
     st.caption("Projeto acadêmico • 2026")
 
 
-# ============================================================
+
 # VISÃO GERAL
-# ============================================================
+
 
 if pagina == "Visão geral":
 
@@ -620,9 +620,9 @@ if pagina == "Visão geral":
         )
 
 
-# ============================================================
+
 # DEMAIS PÁGINAS
-# ============================================================
+
 
 elif pagina == "Usuários":
 

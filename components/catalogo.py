@@ -22,10 +22,10 @@ from services.episodio_service import (
 from database.erros import ErroAplicacao
 
 
-# ============================================================
+
 # FUNÇÕES AUXILIARES DE INTERFACE
 # (as classes CSS são definidas no app.py)
-# ============================================================
+
 
 def formatar_numero(valor):
     try:
@@ -64,9 +64,9 @@ def titulo_secao(titulo, subtitulo):
     """, unsafe_allow_html=True)
 
 
-# ============================================================
+
 # PÁGINA
-# ============================================================
+
 
 def mostrar_catalogo():
 

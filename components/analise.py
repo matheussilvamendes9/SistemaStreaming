@@ -69,7 +69,7 @@ def carregar_distribuicao_notas(tipo, votos_minimos):
 
 def mostrar_analise():
 
-    st.title("📈 Análise de Dados")
+    st.title("Análise de Dados")
     st.markdown(
         "Explore indicadores e tendências do mercado audiovisual "
         "a partir dos dados disponibilizados pelo IMDb."

@@ -566,9 +566,9 @@ def mostrar_catalogo():
             )
 
             aba_cad_ep, aba_edit_ep, aba_exc_ep = st.tabs([
-                "➕  Cadastrar",
-                "✏️  Editar",
-                "🗑️  Excluir"
+                "Cadastrar",
+                "Editar",
+                "Excluir"
             ])
 
             # 

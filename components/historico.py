@@ -77,9 +77,9 @@ def mostrar_historico():
         "realizadas pelos usuários."
     )
 
-    # --------------------------------------------------------
+    
     # Consulta ao banco de dados
-    # --------------------------------------------------------
+    
     try:
         historico = listar_historico()
         usuarios = listar_usuarios()
@@ -94,9 +94,9 @@ def mostrar_historico():
         st.error(f"Erro ao carregar histórico: {e}")
         return
 
-    # --------------------------------------------------------
+    
     # Indicadores
-    # --------------------------------------------------------
+    
     total = len(historico)
 
     tempo_total = sum(
@@ -112,21 +112,21 @@ def mostrar_historico():
 
     with col1:
         cartao_indicador(
-            "▶️", "Reproduções",
+            "▶", "Reproduções",
             formatar_numero(total),
             "Total de reproduções registradas"
         )
 
     with col2:
         cartao_indicador(
-            "⏱️", "Tempo assistido",
+            "⏱", "Tempo assistido",
             f"{tempo_total:g} min",
             f"≈ {tempo_total / 60:.1f} horas no total".replace(".", ",")
         )
 
     with col3:
         cartao_indicador(
-            "🎬", "Conteúdos",
+            "", "Conteúdos",
             formatar_numero(conteudos_unicos),
             "Títulos diferentes reproduzidos"
         )
@@ -134,19 +134,19 @@ def mostrar_historico():
     st.write("")
     st.write("")
 
-    # --------------------------------------------------------
+    
     # Seções
-    # --------------------------------------------------------
+    
     aba_lista, aba_ranking, aba_registro, aba_exclusao = st.tabs([
-        "📋  Reproduções",
-        "📊  Ranking",
-        "▶️  Registrar",
-        "🗑️  Excluir"
+        "Reproduções",
+        "Ranking",
+        "Registrar",
+        "Excluir"
     ])
 
-    # ========================================================
+    
     # LISTAGEM E FILTROS
-    # ========================================================
+    
     with aba_lista:
 
         titulo_secao(
@@ -260,9 +260,9 @@ def mostrar_historico():
             else:
                 st.info("Nenhuma reprodução encontrada.")
 
-    # ========================================================
+    
     # RANKING
-    # ========================================================
+    
     with aba_ranking:
 
         titulo_secao(
@@ -353,9 +353,9 @@ def mostrar_historico():
                 "Ainda não existem reproduções para visualizar."
             )
 
-    # ========================================================
+    
     # CADASTRO DE REPRODUÇÃO
-    # ========================================================
+    
     with aba_registro:
 
         if not usuarios:
@@ -488,9 +488,9 @@ def mostrar_historico():
                     except Exception as e:
                         st.error(f"Erro ao registrar reprodução: {e}")
 
-    # ========================================================
+    
     # EXCLUSÃO
-    # ========================================================
+    
     with aba_exclusao:
 
         if historico:

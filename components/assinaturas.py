@@ -99,9 +99,9 @@ def mostrar_assinaturas():
         "Gerencie os planos e as assinaturas dos usuários."
     )
 
-    # --------------------------------------------------------
+    
     # Carregamento dos dados
-    # --------------------------------------------------------
+    
     try:
         assinaturas = listar_assinaturas()
         usuarios = listar_usuarios()
@@ -115,9 +115,9 @@ def mostrar_assinaturas():
         st.error(f"Erro ao carregar assinaturas: {e}")
         return
 
-    # --------------------------------------------------------
+    
     # Indicadores
-    # --------------------------------------------------------
+    
     total = len(assinaturas)
     ativas = sum(a["status"] == "ativa" for a in assinaturas)
     canceladas = sum(a["status"] == "cancelada" for a in assinaturas)
@@ -156,9 +156,9 @@ def mostrar_assinaturas():
     st.write("")
     st.write("")
 
-    # --------------------------------------------------------
+    
     # Consulta e filtros
-    # --------------------------------------------------------
+    
     titulo_secao(
         "Assinaturas cadastradas",
         "Pesquise por usuário ou filtre pelo status da assinatura."
@@ -249,9 +249,9 @@ def mostrar_assinaturas():
 
     st.write("")
 
-    # --------------------------------------------------------
+    
     # Verificação de usuários e planos
-    # --------------------------------------------------------
+    
     if not usuarios:
         st.warning(
             "Não existem usuários cadastrados. "
@@ -286,19 +286,19 @@ def mostrar_assinaturas():
         for a in assinaturas
     }
 
-    # --------------------------------------------------------
+    
     # Ações
-    # --------------------------------------------------------
+    
     titulo_secao(
         "Ações",
         "Cadastre, edite, encerre ou exclua assinaturas."
     )
 
     aba_cadastro, aba_edicao, aba_encerrar, aba_exclusao = st.tabs([
-        "➕  Cadastrar",
-        "✏️  Editar",
-        "⏹️  Encerrar",
-        "🗑️  Excluir"
+        "Cadastrar",
+        "Editar",
+        "Encerrar",
+        "Excluir"
     ])
 
     # ========================================================

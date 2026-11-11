@@ -80,9 +80,9 @@ def mostrar_analise():
     try:
 
         
-        # ====================================================
+        # 
         # 1. VISÃO GERAL
-        # ====================================================
+        # 
 
         st.subheader("Visão geral do catálogo IMDb")
 
@@ -170,9 +170,9 @@ def mostrar_analise():
 
         st.divider()
 
-        # ====================================================
+        # 
         # 2. COMPARAÇÃO ENTRE TIPOS DE PRODUÇÃO
-        # ====================================================
+        # 
 
         st.subheader("Panorama por tipo de produção")
 
@@ -225,9 +225,9 @@ def mostrar_analise():
 
         st.divider()
 
-        # ====================================================
+        # 
         # 3. DISTRIBUIÇÃO DAS NOTAS
-        # ====================================================
+        # 
 
         st.subheader("Distribuição das avaliações")
 
@@ -325,9 +325,9 @@ def mostrar_analise():
         st.divider()
 
 
-        # ====================================================
+        # 
         # 2. PRODUÇÃO POR ANO
-        # ====================================================
+        # 
 
         st.subheader("Produção audiovisual por ano")
 
@@ -417,9 +417,9 @@ def mostrar_analise():
 
         st.divider()
 
-        # ====================================================
+        # 
         # 3. DURAÇÃO MÉDIA DOS FILMES
-        # ====================================================
+        # 
 
         st.subheader("Evolução da duração média dos filmes")
 
@@ -488,9 +488,9 @@ def mostrar_analise():
 
         st.divider()
 
-        # ====================================================
+        # 
         # 4. RANKING POR GÊNERO
-        # ====================================================
+        # 
 
         st.subheader("Filmes mais bem avaliados por gênero")
 

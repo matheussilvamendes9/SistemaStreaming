@@ -9,10 +9,18 @@ CREATE TABLE IF NOT EXISTS usuario (
     id_usuario INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(120) NOT NULL,
     email VARCHAR(255) NOT NULL,
+    senha_hash VARCHAR(255) NOT NULL,
+    papel ENUM('admin', 'usuario')
+        NOT NULL DEFAULT 'usuario',
     data_cadastro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     CONSTRAINT uq_usuario_email UNIQUE (email),
-    CONSTRAINT ck_usuario_nome CHECK (CHAR_LENGTH(TRIM(nome)) > 0),
-    CONSTRAINT ck_usuario_email CHECK (CHAR_LENGTH(TRIM(email)) > 0)
+    CONSTRAINT ck_usuario_nome CHECK (
+        CHAR_LENGTH(TRIM(nome)) > 0
+    ),
+    CONSTRAINT ck_usuario_email CHECK (
+        CHAR_LENGTH(TRIM(email)) > 0
+    )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS plano (

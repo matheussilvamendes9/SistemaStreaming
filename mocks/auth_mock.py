@@ -2,15 +2,17 @@
 from mocks.dados_mock import USUARIO_ADMIN, USUARIO_COMUM
 
 
-# Credenciais fictícias, utilizadas somente durante o desenvolvimento.
+# Credenciais fictícias para desenvolvimento.
 USUARIOS_TESTE = {
     "admin@streamhub.com": {
         "senha": "admin123",
-        "usuario": USUARIO_ADMIN
+        "usuario": USUARIO_ADMIN,
+        "token": "token_mock_admin"
     },
     "usuario@streamhub.com": {
         "senha": "usuario123",
-        "usuario": USUARIO_COMUM
+        "usuario": USUARIO_COMUM,
+        "token": "token_mock_usuario"
     }
 }
 
@@ -22,14 +24,11 @@ def fazer_login(email, senha):
 
     usuario_teste = USUARIOS_TESTE.get(email)
 
-    if usuario_teste is None:
-        raise ValueError("E-mail ou senha incorretos.")
-
-    if usuario_teste["senha"] != senha:
+    if usuario_teste is None or usuario_teste["senha"] != senha:
         raise ValueError("E-mail ou senha incorretos.")
 
     return {
-        "access_token": "token_mock_streamhub",
+        "access_token": usuario_teste["token"],
         "token_type": "bearer",
         "usuario": usuario_teste["usuario"]
     }
@@ -37,12 +36,11 @@ def fazer_login(email, senha):
 
 def obter_usuario_atual(token):
     """
-    Simula a identificação do usuário autenticado.
+    Identifica o usuário associado ao token fictício.
     """
 
-    if token != "token_mock_streamhub":
-        raise ValueError("Sessão inválida ou expirada.")
+    for usuario_teste in USUARIOS_TESTE.values():
+        if usuario_teste["token"] == token:
+            return usuario_teste["usuario"]
 
-    # Neste mock, o administrador é apenas um usuário de teste.
-    # A identificação real será feita pela API.
-    return None
+    raise ValueError("Sessão inválida ou expirada.")

@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
+from components.login import mostrar_login
 from components.usuarios import mostrar_usuarios
 from components.catalogo import mostrar_catalogo
 from components.assinaturas import mostrar_assinaturas
@@ -360,7 +361,22 @@ hr {{
 </style>
 """, unsafe_allow_html=True)
 
+# ----------------------------------------------------
+# AUTENTICAÇÃO
+# ----------------------------------------------------
 
+# Verifica se existe uma sessão autenticada.
+if not st.session_state.get("autenticado", False):
+    mostrar_login()
+    st.stop()
+
+# Recupera os dados do usuário autenticado.
+usuario_atual = st.session_state.get("usuario")
+
+# Proteção contra sessões inconsistentes.
+if not usuario_atual:
+    st.session_state.clear()
+    st.rerun()
 
 # FUNÇÕES AUXILIARES DE INTERFACE
 
@@ -424,24 +440,25 @@ with st.sidebar:
 
     st.markdown('<div class="rotulo-menu">NAVEGAÇÃO</div>', unsafe_allow_html=True)
 
-    pagina = st.radio(
-        "Menu principal",
-        [
+    papel = usuario_atual["papel"]
+
+    if papel == "admin":
+        paginas = [
             "Visão geral",
             "Usuários",
             "Catálogo",
             "Assinaturas",
             "Histórico",
             "Análise de Dados"
-        ],
-        format_func=lambda p: {
-            "Visão geral": "Visão geral",
-            "Usuários": "Usuários",
-            "Catálogo": "Catálogo",
-            "Assinaturas": "Assinaturas",
-            "Histórico": "Histórico",
-            "Análise de Dados": "Análise de Dados",
-        }[p],
+        ]
+    else:
+        paginas = [
+            "Área do assinante"
+        ]
+
+    pagina = st.radio(
+        "Menu principal",
+        paginas,
         label_visibility="collapsed"
     )
 
@@ -449,6 +466,19 @@ with st.sidebar:
 
     st.caption("Sistema de gerenciamento")
     st.caption("Projeto acadêmico • 2026")
+
+    st.divider()
+
+    st.caption(f"Conectado como: **{usuario_atual['nome']}**")
+    st.caption(
+        "Administrador"
+        if usuario_atual["papel"] == "admin"
+        else "Usuário"
+    )
+
+    if st.button("Sair", use_container_width=True):
+        st.session_state.clear()
+        st.rerun()
 
 
 
@@ -643,3 +673,17 @@ elif pagina == "Histórico":
 elif pagina == "Análise de Dados":
 
     mostrar_analise()
+
+elif pagina == "Área do assinante":
+
+    cabecalho_pagina(
+        "STREAMHUB",
+        f"Olá, {usuario_atual['nome']}!",
+        "Bem-vindo à sua área de assinante."
+    )
+
+    st.info(
+        "Estamos preparando sua área de assinante. "
+        "Em breve você poderá consultar o catálogo, "
+        "os planos, sua assinatura e seu histórico."
+    )

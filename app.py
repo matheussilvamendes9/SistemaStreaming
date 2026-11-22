@@ -453,7 +453,8 @@ with st.sidebar:
         ]
     else:
         paginas = [
-            "Área do assinante"
+            "Área do assinante",
+            "Catálogo"
         ]
 
     pagina = st.radio(
@@ -660,7 +661,7 @@ elif pagina == "Usuários":
 
 elif pagina == "Catálogo":
 
-    mostrar_catalogo()
+    mostrar_catalogo(usuario_atual["papel"])
 
 elif pagina == "Assinaturas":
 

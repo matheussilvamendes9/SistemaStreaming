@@ -1,25 +1,19 @@
 import streamlit as st
 import pandas as pd
 
-from services.conteudo_service import (
+from mocks.catalogo_mock import (
     listar_catalogo,
     obter_conteudo,
     criar_conteudo,
     atualizar_conteudo,
-    excluir_conteudo
-)
-
-from services.genero_service import listar_generos
-
-from services.episodio_service import (
+    excluir_conteudo,
+    listar_generos,
     listar_episodios,
     obter_episodio,
     criar_episodio,
     atualizar_episodio,
     excluir_episodio
 )
-
-from database.erros import ErroAplicacao
 
 
 
@@ -67,14 +61,148 @@ def titulo_secao(titulo, subtitulo):
 
 # PÁGINA
 
-
-def mostrar_catalogo():
-
+def mostrar_catalogo_usuario(generos, conteudos):
     cabecalho_pagina(
-        "GESTÃO",
+        "STREAMHUB",
         "Catálogo",
-        "Cadastre, consulte, edite e exclua filmes, séries e episódios."
+        "Explore filmes e séries disponíveis na plataforma."
     )
+
+    titulo_secao(
+        "Encontre seu próximo conteúdo",
+        "Pesquise por título e filtre por tipo ou gênero."
+    )
+
+    with st.container(border=True):
+        col_busca, col_tipo, col_genero = st.columns(
+            [2, 1, 1],
+            gap="medium"
+        )
+
+        with col_busca:
+            busca = st.text_input(
+                "Pesquisar por título",
+                placeholder="Digite o nome do conteúdo..."
+            )
+
+        with col_tipo:
+            tipo_filtro = st.selectbox(
+                "Tipo",
+                ["Todos", "Filme", "Série"]
+            )
+
+        with col_genero:
+            genero_filtro = st.selectbox(
+                "Gênero",
+                ["Todos"] + [g["nome"] for g in generos]
+            )
+
+    tipo_db = {
+        "Todos": None,
+        "Filme": "filme",
+        "Série": "serie"
+    }[tipo_filtro]
+
+    filtrados = listar_catalogo(
+        busca=busca,
+        tipo=tipo_db
+    )
+
+    if genero_filtro != "Todos":
+        filtrados = [
+            c for c in filtrados
+            if genero_filtro in c.get("generos", [])
+        ]
+
+    st.write("")
+
+    titulo_secao(
+        "Resultados",
+        f"{len(filtrados)} conteúdo(s) encontrado(s)."
+    )
+
+    if filtrados:
+        df = pd.DataFrame(filtrados)
+
+        df = df.rename(columns={
+            "titulo": "Título",
+            "tipo": "Tipo",
+            "ano_lancamento": "Ano",
+            "duracao_minutos": "Duração (min)",
+            "generos": "Gêneros",
+            "total_episodios": "Episódios"
+        })
+
+        df["Tipo"] = df["Tipo"].map({
+            "filme": "🍿 Filme",
+            "serie": "📺 Série"
+        })
+
+        colunas = [
+            "Título", "Tipo", "Ano",
+            "Duração (min)", "Gêneros", "Episódios"
+        ]
+
+        st.dataframe(
+            df[colunas],
+            use_container_width=True,
+            hide_index=True
+        )
+
+    else:
+        st.info("Nenhum conteúdo encontrado com esses filtros.")
+
+    series = [
+        c for c in filtrados
+        if c["tipo"] == "serie"
+    ]
+
+    st.write("")
+
+    titulo_secao(
+        "Episódios",
+        "Consulte os episódios disponíveis nas séries."
+    )
+
+    if not series:
+        st.info("Não há séries nos resultados atuais.")
+        return
+
+    opcoes_series = {
+        s["titulo"]: s["id_conteudo"]
+        for s in series
+    }
+
+    serie_selecionada = st.selectbox(
+        "Selecione uma série",
+        list(opcoes_series.keys()),
+        key="consulta_serie_usuario"
+    )
+
+    id_serie = opcoes_series[serie_selecionada]
+    episodios = listar_episodios(id_serie)
+
+    if episodios:
+        df_ep = pd.DataFrame(episodios)
+
+        df_ep = df_ep.rename(columns={
+            "titulo": "Título",
+            "temporada": "Temporada",
+            "episodio": "Episódio",
+            "duracao_minutos": "Duração (min)"
+        })
+
+        st.dataframe(
+            df_ep[
+                ["Título", "Temporada", "Episódio", "Duração (min)"]
+            ],
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.info("Esta série ainda não possui episódios.")
+
+def mostrar_catalogo(papel="admin"):
 
     try:
         generos = listar_generos()
@@ -83,6 +211,16 @@ def mostrar_catalogo():
     except Exception as e:
         st.error(f"Erro ao carregar o catálogo: {e}")
         return
+
+    if papel != "admin":
+        mostrar_catalogo_usuario(generos, conteudos)
+        return
+
+    cabecalho_pagina(
+        "GESTÃO",
+        "Catálogo",
+        "Cadastre, consulte, edite e exclua filmes, séries e episódios."
+    )
 
     
     # Indicadores

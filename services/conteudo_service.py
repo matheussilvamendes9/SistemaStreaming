@@ -7,13 +7,16 @@ TIPOS = ("filme", "serie")
 
 
 def _validar(titulo, tipo, ano, duracao):
-    titulo = exigir_texto(titulo, "titulo", 150)
+    titulo = exigir_texto(titulo, "titulo", 255)
     tipo = validar_opcao(tipo, TIPOS, "tipo")
     ano = validar_inteiro(ano, "ano de lancamento", 1888, 2100)
     if tipo == "filme":
+        if duracao in (None, ""):
+            raise ErroAplicacao("Filmes exigem a duracao em minutos.")
         duracao = validar_inteiro(duracao, "duracao (minutos)", 1)
-    else:  # serie: duracao opcional
-        duracao = validar_inteiro(duracao, "duracao (minutos)", 1) if duracao else None
+    else:
+        # Serie nao tem duracao propria: o banco exige NULL (a duracao fica nos episodios).
+        duracao = None
     return titulo, tipo, ano, duracao
 
 
@@ -29,7 +32,7 @@ def _gravar_generos(cur, id_conteudo, ids_generos):
 
 def criar_conteudo(titulo, tipo, ano_lancamento, duracao_minutos=None, ids_generos=None):
     dados = _validar(titulo, tipo, ano_lancamento, duracao_minutos)
-    with transacao() as cur:
+    with transacao() as cur:  # conteudo + generos na mesma transacao
         cur.execute(
             "INSERT INTO conteudo (titulo, tipo, ano_lancamento, duracao_minutos) "
             "VALUES (%s, %s, %s, %s)", dados)
@@ -40,6 +43,7 @@ def criar_conteudo(titulo, tipo, ano_lancamento, duracao_minutos=None, ids_gener
 
 def atualizar_conteudo(id_conteudo, titulo, tipo, ano_lancamento,
                        duracao_minutos=None, ids_generos=None):
+    """O banco bloqueia trocar o tipo de um conteudo que ja tem episodios ou historico."""
     dados = _validar(titulo, tipo, ano_lancamento, duracao_minutos)
     with transacao() as cur:
         cur.execute(
@@ -49,6 +53,7 @@ def atualizar_conteudo(id_conteudo, titulo, tipo, ano_lancamento,
 
 
 def excluir_conteudo(id_conteudo):
+    """Apaga tambem episodios, historico e vinculos de genero (CASCADE)."""
     if not obter_conteudo(id_conteudo):
         raise ErroAplicacao("Conteudo nao encontrado.")
     executar("DELETE FROM conteudo WHERE id_conteudo = %s", (id_conteudo,))
@@ -67,10 +72,11 @@ def obter_conteudo(id_conteudo):
 
 
 def listar_catalogo(busca=None, tipo=None, id_genero=None):
-    """RF06: titulo, tipo, ano, duracao e generos de cada conteudo."""
+    """RF06: titulo, tipo, ano, duracao, generos e (para series) total de episodios."""
     sql = """
         SELECT c.id_conteudo, c.titulo, c.tipo, c.ano_lancamento, c.duracao_minutos,
-               COALESCE(GROUP_CONCAT(g.nome ORDER BY g.nome SEPARATOR ', '), '') AS generos
+               COALESCE(GROUP_CONCAT(g.nome ORDER BY g.nome SEPARATOR ', '), '') AS generos,
+               (SELECT COUNT(*) FROM episodio e WHERE e.id_serie = c.id_conteudo) AS total_episodios
         FROM conteudo c
         LEFT JOIN conteudo_genero cg ON cg.id_conteudo = c.id_conteudo
         LEFT JOIN genero g ON g.id_genero = cg.id_genero
@@ -86,5 +92,6 @@ def listar_catalogo(busca=None, tipo=None, id_genero=None):
     if id_genero:
         sql += " AND c.id_conteudo IN (SELECT id_conteudo FROM conteudo_genero WHERE id_genero = %s)"
         params.append(int(id_genero))
-    sql += " GROUP BY c.id_conteudo, c.titulo, c.tipo, c.ano_lancamento, c.duracao_minutos ORDER BY c.titulo"
+    sql += (" GROUP BY c.id_conteudo, c.titulo, c.tipo, c.ano_lancamento, c.duracao_minutos"
+            " ORDER BY c.titulo")
     return consultar(sql, tuple(params))

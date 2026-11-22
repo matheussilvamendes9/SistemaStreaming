@@ -30,8 +30,18 @@ def consultar(id_usuario: int, _: dict = Depends(exigir_admin)):
 
 
 @router.post("", response_model=UsuarioOut, status_code=201)
-def criar(dados: UsuarioCriarIn, _: dict = Depends(exigir_admin)):
-    id_usuario = criar_conta(dados.nome, dados.email, dados.senha, dados.papel)
+def criar(
+    dados: UsuarioCriarIn,
+    _: dict = Depends(exigir_admin)
+):
+    id_usuario = criar_conta(
+        nome=dados.nome,
+        email=dados.email,
+        senha=dados.senha,
+        papel=dados.papel,
+        id_plano=dados.id_plano,
+    )
+
     return obter_usuario_publico(id_usuario)
 
 

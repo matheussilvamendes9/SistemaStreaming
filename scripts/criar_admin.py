@@ -6,22 +6,53 @@ Uso (na raiz do projeto):
 Lê ADMIN_NOME / ADMIN_EMAIL / ADMIN_SENHA do ambiente ou pergunta no terminal
 (a senha é digitada sem eco e nunca é impressa).
 Se o e-mail já existir, promove a conta a admin e redefine a senha.
+
+O administrador é criado SEM assinatura: o plano só é exigido no cadastro de
+usuários comuns (criar_conta), por isso este script grava a conta diretamente.
 """
 import getpass
 import os
+import sys
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from services.auth_service import (criar_conta, definir_papel, definir_senha,  # noqa: E402
-                                   obter_por_email)
+from database.connection import executar  # noqa: E402
+from database.erros import ErroAplicacao  # noqa: E402
+from services.auth_service import (  # noqa: E402
+    definir_papel,
+    definir_senha,
+    gerar_hash,
+    obter_por_email,
+    validar_senha,
+)
+from services.validators import exigir_texto, validar_email  # noqa: E402
+
+
+def _ler_senha():
+    senha = os.getenv("ADMIN_SENHA")
+    if senha:
+        return senha
+    senha = getpass.getpass("Senha (mín. 8 caracteres): ")
+    if senha != getpass.getpass("Confirme a senha: "):
+        raise ErroAplicacao("As senhas informadas não conferem.")
+    return senha
+
+
+def _criar_admin(nome, email, senha):
+    """Insere o administrador diretamente (sem assinatura inicial)."""
+    return executar(
+        "INSERT INTO usuario (nome, email, senha_hash, papel) "
+        "VALUES (%s, %s, %s, 'admin')",
+        (nome, email, gerar_hash(senha)),
+    )
 
 
 def main():
-    nome = os.getenv("ADMIN_NOME") or input("Nome: ")
-    email = (os.getenv("ADMIN_EMAIL") or input("E-mail: ")).strip().lower()
-    senha = os.getenv("ADMIN_SENHA") or getpass.getpass("Senha (mín. 8 caracteres): ")
+    nome = exigir_texto(os.getenv("ADMIN_NOME") or input("Nome: "), "nome", 120)
+    email = validar_email(os.getenv("ADMIN_EMAIL") or input("E-mail: "))
+    senha = validar_senha(_ler_senha())
 
     existente = obter_por_email(email)
     if existente:
@@ -29,9 +60,13 @@ def main():
         definir_papel(existente["id_usuario"], "admin")
         print(f"Conta existente promovida a admin: {email}")
     else:
-        criar_conta(nome, email, senha, papel="admin")
+        _criar_admin(nome, email, senha)
         print(f"Administrador criado: {email}")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ErroAplicacao as erro:
+        print(f"Erro: {erro}", file=sys.stderr)
+        sys.exit(1)

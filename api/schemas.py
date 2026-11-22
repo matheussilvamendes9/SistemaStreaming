@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Papel = Literal["admin", "usuario"]
 StatusAssinatura = Literal["ativa", "cancelada", "expirada"]
@@ -33,10 +33,24 @@ class TokenOut(BaseModel):
     usuario: UsuarioOut
 
 
+def validar_limite_bcrypt(senha: str) -> str:
+    if len(senha.encode("utf-8")) > 72:
+        raise ValueError(
+            "A senha deve ter no máximo 72 bytes."
+        )
+    return senha
+
+
 class RegistroIn(_Estrito):
     nome: str = Field(min_length=1, max_length=120)
     email: str = Field(max_length=255)
-    senha: str = Field(min_length=8, max_length=72)
+    senha: str = Field(min_length=8)
+    id_plano: int = Field(gt=0)
+
+    @field_validator("senha")
+    @classmethod
+    def validar_bytes_senha(cls, senha):
+        return validar_limite_bcrypt(senha)
 
 
 class UsuarioCriarIn(RegistroIn):

@@ -1,14 +1,12 @@
 import streamlit as st
 import pandas as pd
 
-from services.usuario_service import (
+from mocks.usuarios_mock import (
     listar_usuarios,
     criar_usuario,
     atualizar_usuario,
     excluir_usuario
 )
-
-from database.erros import ErroAplicacao
 
 
 
@@ -213,7 +211,7 @@ def mostrar_usuarios():
                             st.success("Usuário cadastrado com sucesso!")
                             st.rerun()
 
-                        except ErroAplicacao as erro:
+                        except ValueError as erro:
                             st.error(str(erro))
 
                         except Exception as erro:
@@ -282,7 +280,7 @@ def mostrar_usuarios():
                                 st.success("Usuário atualizado com sucesso!")
                                 st.rerun()
 
-                            except ErroAplicacao as erro:
+                            except ValueError as erro:
                                 st.error(str(erro))
 
                             except Exception as erro:
@@ -336,7 +334,7 @@ def mostrar_usuarios():
                             st.success("Usuário excluído com sucesso!")
                             st.rerun()
 
-                        except ErroAplicacao as erro:
+                        except ValueError as erro:
                             st.error(str(erro))
 
                         except Exception as erro:

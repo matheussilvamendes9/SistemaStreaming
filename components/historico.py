@@ -2,17 +2,15 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-from services.historico_service import (
+from mocks.historico_mock import (
     listar_historico,
     registrar_reproducao,
-    excluir_reproducao
+    excluir_reproducao,
+    listar_episodios
 )
 
-from services.usuario_service import listar_usuarios
-from services.conteudo_service import listar_catalogo
-from services.episodio_service import listar_episodios
-
-from database.erros import ErroAplicacao
+from mocks.usuarios_mock import listar_usuarios
+from mocks.catalogo_mock import listar_catalogo
 
 
 # Cores (iguais às do app.py)
@@ -86,7 +84,7 @@ def mostrar_historico():
         catalogo = listar_catalogo()
         episodios = listar_episodios()
 
-    except ErroAplicacao as e:
+    except ValueError as e:
         st.error(str(e))
         return
 
@@ -482,7 +480,7 @@ def mostrar_historico():
                         st.success("Reprodução registrada com sucesso!")
                         st.rerun()
 
-                    except ErroAplicacao as e:
+                    except ValueError as e:
                         st.error(str(e))
 
                     except Exception as e:
@@ -547,7 +545,7 @@ def mostrar_historico():
 
                             st.rerun()
 
-                        except ErroAplicacao as e:
+                        except ValueError as e:
                             st.error(str(e))
 
                         except Exception as e:

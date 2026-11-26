@@ -2,17 +2,16 @@ import streamlit as st
 import pandas as pd
 from datetime import date, timedelta
 
-from services.assinatura_service import (
+from mocks.assinaturas_mock import (
     listar_assinaturas,
     criar_assinatura,
     atualizar_assinatura,
     encerrar_assinatura,
-    excluir_assinatura
+    excluir_assinatura,
+    listar_planos
 )
 
-from services.plano_service import listar_planos
-from services.usuario_service import listar_usuarios
-from database.erros import ErroAplicacao
+from mocks.usuarios_mock import listar_usuarios
 
 
 STATUS = {
@@ -107,7 +106,7 @@ def mostrar_assinaturas():
         usuarios = listar_usuarios()
         planos = listar_planos()
 
-    except ErroAplicacao as e:
+    except ValueError as e:
         st.error(str(e))
         return
 
@@ -393,7 +392,7 @@ def mostrar_assinaturas():
                             st.success("Assinatura cadastrada com sucesso!")
                             st.rerun()
 
-                        except ErroAplicacao as e:
+                        except ValueError as e:
                             st.error(str(e))
 
                         except Exception as e:
@@ -496,7 +495,7 @@ def mostrar_assinaturas():
                             st.success("Assinatura atualizada com sucesso!")
                             st.rerun()
 
-                        except ErroAplicacao as e:
+                        except ValueError as e:
                             st.error(str(e))
 
                         except Exception as e:
@@ -571,7 +570,7 @@ def mostrar_assinaturas():
                             st.success("Assinatura encerrada com sucesso!")
                             st.rerun()
 
-                        except ErroAplicacao as e:
+                        except ValueError as e:
                             st.error(str(e))
 
                         except Exception as e:
@@ -622,7 +621,7 @@ def mostrar_assinaturas():
                             st.success("Assinatura excluída com sucesso!")
                             st.rerun()
 
-                        except ErroAplicacao as e:
+                        except ValueError as e:
                             st.error(str(e))
 
                         except Exception as e:

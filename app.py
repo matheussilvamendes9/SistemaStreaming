@@ -7,7 +7,6 @@ from components.usuarios import mostrar_usuarios
 from components.catalogo import mostrar_catalogo
 from components.assinaturas import mostrar_assinaturas
 from components.historico import mostrar_historico
-from components.analise import mostrar_analise
 
 from services.indicadores_service import obter_indicadores
 from database.erros import ErroAplicacao
@@ -448,8 +447,8 @@ with st.sidebar:
             "Usuários",
             "Catálogo",
             "Assinaturas",
-            "Histórico",
-            "Análise de Dados"
+            "Histórico"
+            
         ]
     else:
         paginas = [
@@ -670,10 +669,6 @@ elif pagina == "Assinaturas":
 elif pagina == "Histórico":
 
     mostrar_historico()
-
-elif pagina == "Análise de Dados":
-
-    mostrar_analise()
 
 elif pagina == "Área do assinante":
 

@@ -67,7 +67,6 @@ SistemaStreaming/
 │
 ├── database/
 │   ├── connection.py
-│   ├── setup_analise.py
 │   └── ...
 │
 ├── .env
@@ -173,28 +172,8 @@ Substitua `sua_senha` pela senha configurada no seu MySQL.
 
 Não compartilhe o arquivo `.env` nem envie suas credenciais para o GitHub.
 
-### 7. Importar os dados do IMDb (Banco Analítico)
 
-O Banco A utiliza os conjuntos de dados públicos do IMDb, disponibilizados em:
-
-https://datasets.imdbws.com/
-
-Para realizar a importação, execute:
-
-```bash
-python database/setup_analise.py
-```
-
-O script realiza o download, a descompactação e a importação dos arquivos necessários para o banco analítico.
-
-A carga inclui os conjuntos:
-
-- `title.basics.tsv.gz`: informações gerais das produções audiovisuais.
-- `title.ratings.tsv.gz`: notas médias e quantidade de votos dos títulos.
-
-**Atenção:** essa etapa importa milhões de registros e pode levar algum tempo, dependendo da conexão com a internet e do computador utilizado. Execute a importação apenas uma vez em uma base vazia. Se os dados já estiverem carregados, não execute novamente sem verificar o comportamento do script.
-
-### 8. Executar a aplicação
+### 7. Executar a aplicação
 
 Após configurar o MySQL, criar as tabelas e instalar as dependências, inicie o Streamlit:
 

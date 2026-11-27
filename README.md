@@ -51,7 +51,6 @@ SistemaStreaming/
 ├── app.py
 │
 ├── components/
-│   ├── analise.py
 │   ├── usuarios.py
 │   ├── catalogo.py
 │   ├── assinaturas.py
@@ -62,7 +61,6 @@ SistemaStreaming/
 │   ├── usuario_service.py
 │   ├── catalogo_service.py
 │   ├── assinatura_service.py
-│   ├── analise_service.py
 │   └── ...
 │
 ├── database/
